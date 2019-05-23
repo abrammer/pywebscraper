@@ -1,0 +1,16 @@
+
+'fsu': 
+    'url': 'http://moe.met.fsu.edu/modelgen/text/'
+    'regex_match': '(.*201[2,3,4,5,6,7,8].*)|(.*.png)'
+    'download_location': '/Users/abrammer/repos/web_scaper/output/'
+'mercer': 
+    'url': 'http://arashi.geosci.msstate.edu/jht/'
+    'download_location': '/Users/abrammer/repos/web_scaper/output/'
+'jiang': 
+    'url': 'http://tcpf.fiu.edu/JHT/'
+    'download_location': '/Users/abrammer/repos/web_scaper/output/'
+'roebber': 
+    'url': 'http://derecho.math.uwm.edu/models/ep/'
+    'regex_match': '.*201[4,5,6,7,8].*'
+    'download_location': '/Users/abrammer/repos/web_scaper/output/'
+

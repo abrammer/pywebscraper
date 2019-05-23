@@ -1,0 +1,4 @@
+
+'tracks': 
+    'url': 'https://ftp.ncep.noaa.gov/data/nccf/com/ens_tracker/prod/'
+    'download_location': '/Users/abrammer/repos/web_scaper/output/'

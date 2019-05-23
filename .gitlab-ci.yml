@@ -1,0 +1,6 @@
+image: bear.cira.colostate.edu:4567/abrammer/web_scraper
+
+tests:
+  stage: test
+  script:
+    - pytest ./
