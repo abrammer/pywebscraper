@@ -1,4 +1,4 @@
-image: bear.cira.colostate.edu:4567/abrammer/web_scraper
+image: bear.cira.colostate.edu:4567/abrammer/web_scraper:latest
 
 tests:
   stage: test
