@@ -10,6 +10,10 @@ import requests
 import requests_mock
 import yaml
 
+try:
+    import tests.context
+except ModuleNotFoundError:
+    import context
 from web_scraper import scrape
 
 
