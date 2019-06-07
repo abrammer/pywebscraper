@@ -31,6 +31,19 @@
   register: output
   when: env_file.changed
 
+
+- name: setup logrotate
+  template:
+    src: logrotate.conf.j2
+    dest: "{{ working_dir }}/logrotate.conf"
+  register: logrotate
+
+- name: Setup logrotate for webscraper
+  cron: 
+    minute: "0"
+    hour: "0"
+    name: "logrotate for {{ cron_name }}"
+    job: "logrotate {{ working_dir }}/logrotate.conf -s {{ working_dir }}/logrotate.log"
   
 # Copy over config files and source directory
 - name: copy config file over 
