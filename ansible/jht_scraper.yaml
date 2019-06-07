@@ -5,6 +5,6 @@
     cron_hour: "*/6"
     log_file: "/tmp/jht_scraper.log"
     config_file: jht_sites.yaml
-    working_dir: /tmp/jht_scraper
+    working_dir: /home/abrammer/deployed/jht_scraper
   roles:
     - { role: web_scraper }

@@ -97,6 +97,7 @@ class websync(HTMLParser):
         logging.info(f'Checking on {len(parser.return_links)} files')
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             executor.map(parser.cp, parser.return_links)
+        logging.info(f'Finished syncing w/ {url}')
 
 
 def main():
@@ -105,6 +106,8 @@ def main():
     parser.add_argument('--output', default='.,')
     parser.add_argument('--config', type=str)
 
+    FORMAT = '%(levelname)-8s | %(asctime)-15s | %(pathname)-15s +%(lineno)-4d |  %(message)s'
+    logging.basicConfig(format=FORMAT,  datefmt='%Y-%m-%d %H:%M:%S')
     logging.getLogger().setLevel(logging.INFO)
 
     args = parser.parse_args()
