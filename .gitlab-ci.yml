@@ -1,6 +1,16 @@
 image: bear.cira.colostate.edu:4567/abrammer/web_scraper:latest
 
+before_script:
+  - pip install pytest-cov
+
+stages:
+- test
+
 tests:
   stage: test
   script:
-    - pytest ./
+    - pytest --cov=web_scraper ./ --cov-report html --cov-report term
+  coverage: '/web_scraper.*\s+(\d+%)$/'
+  artifacts:
+    paths:
+      - htmlcov
