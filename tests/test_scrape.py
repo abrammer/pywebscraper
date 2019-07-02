@@ -37,7 +37,7 @@ def test_main_config(_scrape):
     config = {
         'test': {
             'url': 'http://none.invalid',
-            'regex_match': '(.*2014.*)'
+            'regex_exclude': '(.*2014.*)'
         }
     }
     with tempfile.NamedTemporaryFile() as tmpfile:
@@ -51,7 +51,7 @@ def test_main_config(_scrape):
         assert _scrape.call_args[0] == ()
         assert _scrape.call_args[1] == {
             'url': config['test']['url'],
-            'regex_match': config['test']['regex_match'],
+            'regex_exclude': config['test']['regex_exclude'],
         }
 
 
@@ -99,7 +99,7 @@ def test_webls_exclude(_cp):
         m.get(test_url, status_code=200, content=return_text1)
         m.get(f'{test_url}/subdir/', status_code=200, content=return_text2)
 
-        websyncer = scrape.websync(test_url, regex_match='(.*214.*)')
+        websyncer = scrape.websync(test_url, regex_exclude='(.*214.*)')
         websyncer.ls()
         assert len(websyncer.return_links) == 3
         assert websyncer.return_links == [
@@ -109,7 +109,7 @@ def test_webls_exclude(_cp):
 
         # test above again passing through scrape this time
         # how many times does cp get hit
-        scrape.websync.scrape(test_url, regex_match='(.*214.*)')
+        scrape.websync.scrape(test_url, regex_exclude='(.*214.*)')
         assert _cp.call_count == 3
 
 
