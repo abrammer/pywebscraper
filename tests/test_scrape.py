@@ -46,7 +46,7 @@ def test_main_config(_scrape):
 
         test_args = ['call.py', '--config', tmpfile.name]
         sys.argv = test_args
-        scrape.main()
+        scrape.main(mp=0)
         assert _scrape.call_count == 1
         assert _scrape.call_args[0] == ()
         assert _scrape.call_args[1] == {
@@ -111,6 +111,37 @@ def test_webls_exclude(_cp):
         # how many times does cp get hit
         scrape.websync.scrape(test_url, regex_exclude='(.*214.*)')
         assert _cp.call_count == 3
+
+
+@mock.patch('web_scraper.scrape.websync.cp', return_value=None)
+def test_webls_include(_cp):
+    return_text1 = b"""
+    <a href="18060818EP0214.DAT">18060818EP0214.DAT</a> 
+    <a href="18060818EP0218.DAT">18060818EP0218.DAT</a> 
+    <a href="1806072011EP02.AMSR2.INTENSITY_ETA.DAT">1806072011EP02.AMSR2..&gt;</a>
+    <a href="subdir/">subdir/</a>
+    """
+    return_text2 = b"""
+    <a href="subdir1.DAT">ubdir1.DAT.DAT</a> 
+    """
+
+    with requests_mock.Mocker() as m:
+        test_url = 'http://none.invalid'
+        m.get(test_url, status_code=200, content=return_text1)
+        m.get(f'{test_url}/subdir/', status_code=200, content=return_text2)
+
+        websyncer = scrape.websync(test_url, regex_include='(.*AMSR2.*)')
+        websyncer.ls()
+        assert len(websyncer.return_links) == 1
+        assert websyncer.return_links == [
+            f'{test_url}/{a}' for a in
+            [ '1806072011EP02.AMSR2.INTENSITY_ETA.DAT']] 
+
+        # test above again passing through scrape this time
+        # how many times does cp get hit
+        scrape.websync.scrape(test_url, regex_include='(.*214.*)')
+        assert _cp.call_count == 1
+
 
 
 def test_sync_file_download():

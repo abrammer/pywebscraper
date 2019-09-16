@@ -13,7 +13,7 @@
     'download_location': '/Users/abrammer/repos/web_scaper/output/'
     'repo': True
 'roebber': 
-    'url': 'http://derecho.math.uwm.edu/models/ep/'
+    'url': 'https://web.uwm.edu/hurricane-models/models/ep/output/'
     'regex_exclude': '.*201[4,5,6,7,8].*'
     'download_location': '/Users/abrammer/repos/web_scaper/output/'
     'repo': True

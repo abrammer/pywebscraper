@@ -1,0 +1,9 @@
+- hosts: web_scraper
+  vars:
+    cron_name: "ncep gefs files"
+    cron_minute: "3"
+    log_file: "/tmp/gefs_scraper.log"
+    working_dir: /home/abrammer/deployed/gefs_scraper
+    config_file: gefs_files.yaml
+  roles:
+    - { role: web_scraper }
