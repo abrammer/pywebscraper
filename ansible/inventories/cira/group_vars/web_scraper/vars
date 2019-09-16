@@ -1,2 +1,2 @@
-conda_bin: /home/abrammer/applications/miniconda3/bin/conda
-download_location: "'/home/abrammer/scraped/'"
+conda_bin: /opt/miniconda3/bin/conda
+download_location: "'/mnt/data1/web_scraped/'"

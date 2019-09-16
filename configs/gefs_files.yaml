@@ -1,0 +1,8 @@
+'download_location': "/mnt/data2/gefs/",
+'remote_format':  "https://nomads.ncep.noaa.gov/pub/data/nccf/com/gens/prod/gefs.{date:%Y%m%d}/{date:%H}/pgrb2ap5/gep{ens:02}.t{date:%H}z.pgrb2a.0p50.f{fhr:03.0f}"
+'local_format': "gefs.{date:%Y%m%d%H}/gep{ens:02}.t{date:%H}z.pgrb2a.0p50.f{fhr:03.0f}.grib",
+'fhr_min':0
+'fhr_max':192
+'fhr_int':3
+'ens_min': 1
+'ens_max': 20
