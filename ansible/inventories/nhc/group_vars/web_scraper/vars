@@ -1,2 +1,2 @@
 conda_bin: ~/miniconda3/bin/conda
-download_location: "'/nhc_home/abrammer/wsra_data/raw_data/'"
+wsra_download_location: "'/nhc_home/abrammer/wsra_data/raw_data/'"

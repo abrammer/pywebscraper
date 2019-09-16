@@ -17,22 +17,22 @@ except ModuleNotFoundError:
 from web_scraper import scrape
 
 
-@mock.patch('web_scraper.scrape.websync.scrape', return_value=None)
+@mock.patch('web_scraper.scrape.scraper.scrape', return_value=None)
 def test_main(_scrape):
     with pytest.raises(RuntimeError):
         test_args = ['call.py']
         sys.argv = test_args
-        scrape.main()
+        scrape.main(mp=1)
 
     test_args = ['call.py', '--url', 'url', '--output', 'outputdir']
     sys.argv = test_args
-    scrape.main()
+    scrape.main(mp=1)
     assert _scrape.call_count == 1
-    assert _scrape.call_args[0] == ('url', )
-    assert _scrape.call_args[1] == {'download_location': 'outputdir'}
+    assert _scrape.call_args[0] == ()
+    assert _scrape.call_args[1] == {'download_location': 'outputdir', 'url': 'url' }
 
 
-@mock.patch('web_scraper.scrape.websync.scrape', return_value=None)
+@mock.patch('web_scraper.scrape.scraper.scrape', return_value=None)
 def test_main_config(_scrape):
     config = {
         'test': {
@@ -46,7 +46,7 @@ def test_main_config(_scrape):
 
         test_args = ['call.py', '--config', tmpfile.name]
         sys.argv = test_args
-        scrape.main(mp=0)
+        scrape.main(mp=1)
         assert _scrape.call_count == 1
         assert _scrape.call_args[0] == ()
         assert _scrape.call_args[1] == {
@@ -78,7 +78,7 @@ def test_webls(_cp):
             ['18060818EP0218.DAT', '1806072011EP02.AMSR2.INTENSITY_ETA.DAT']
         ] + [f'{test_url}/subdir/subdir1.DAT']
 
-        scrape.websync.scrape(test_url)
+        scrape.scraper.scrape(test_url)
         assert _cp.call_count == 3
 
 
@@ -109,7 +109,7 @@ def test_webls_exclude(_cp):
 
         # test above again passing through scrape this time
         # how many times does cp get hit
-        scrape.websync.scrape(test_url, regex_exclude='(.*214.*)')
+        scrape.scraper.scrape(test_url, regex_exclude='(.*214.*)')
         assert _cp.call_count == 3
 
 
@@ -139,7 +139,7 @@ def test_webls_include(_cp):
 
         # test above again passing through scrape this time
         # how many times does cp get hit
-        scrape.websync.scrape(test_url, regex_include='(.*214.*)')
+        scrape.scraper.scrape(test_url, regex_include='(.*214.*)')
         assert _cp.call_count == 1
 
 
@@ -199,7 +199,6 @@ def test_cp_nodownload():
             base_url = 'http://none.invalid/'
             test_url = f'{base_url}/somefile'
             mod_time = datetime(2018, 1, 1, 12, 00) - timedelta(days=1)
-            ret_content = b'test_content'
             m.get(  # will raise an error if a get request is attempted
                 test_url,
                 status_code=404,

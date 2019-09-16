@@ -31,34 +31,12 @@
   register: output
   when: env_file.changed
 
-
-- name: setup logrotate
-  template:
-    src: logrotate.conf.j2
-    dest: "{{ working_dir }}/logrotate.conf"
-  register: logrotate
-
-- name: Setup logrotate for webscraper
-  cron: 
-    minute: "0"
-    hour: "0"
-    name: "logrotate for {{ cron_name }}"
-    job: "logrotate {{ working_dir }}/logrotate.conf -s {{ working_dir }}/logrotate.log"
   
 # Copy over config files and source directory
-- name: copy config file over 
-  copy:
-    src: "{{ source_dir }}/configs/{{ config_file }}"
-    dest: '{{ working_dir }}/{{ config_file }}'
-
-
-# should really use a template here.
-- name: replace download location text in config file
-  replace:
-    path: "{{ working_dir }}/{{ config_file }}"
-    regexp: "'download_location': .*"
-    replace: "'download_location': {{ download_location }}"
-
+- name: setup config file 
+  template:
+    src: wsra_scraper.yaml
+    dest: "{{ working_dir }}/wsra_scraper.yaml"
 
 - name: copy over python source
   synchronize:
@@ -71,4 +49,4 @@
     minute: "{{ cron_minute | default('3') }}"
     hour: "{{ cron_hour | default('*') }}"
     name: "Scraper for {{ cron_name }}"
-    job: "{{ working_dir }}/env/bin/python {{ working_dir }}/web_scraper/scrape.py --config {{ working_dir }}/{{ config_file }} >> {{ log_file }} 2>&1"
+    job: "{{ working_dir }}/env/bin/python {{ working_dir }}/web_scraper/scrape.py --config {{ working_dir }}/{{ config_file }} --service True --logfile {{log_file}}"

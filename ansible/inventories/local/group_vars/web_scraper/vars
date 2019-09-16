@@ -1,1 +1,2 @@
 conda_bin: /Applications/miniconda3/bin/conda
+wsra_download_location: /Users/abrammer/repos/wsra_scraper/output/
