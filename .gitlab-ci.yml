@@ -1,7 +1,8 @@
-image: bear.cira.colostate.edu:4567/abrammer/web_scraper:latest
+image: python:3
 
 before_script:
-  - pip install pytest-cov
+  - python setup.py install
+  - pip install -r requirements.test.txt
 
 stages:
 - test

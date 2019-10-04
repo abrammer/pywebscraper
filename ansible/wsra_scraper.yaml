@@ -1,9 +1,0 @@
-- hosts: web_scraper
-  vars:
-    cron_name: "wsra scraper"
-    cron_minute: "*/15"
-    log_file: "/tmp/wsra_scraper.log"
-    working_dir: /nhc_home/abrammer/deployed/wsra_scraper
-    config_file: wsra_scraper.yaml
-  roles:
-    - { role: web_scraper }

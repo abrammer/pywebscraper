@@ -1,6 +1,0 @@
-
-'tracks': 
-    'url': 'https://seb.noaa.gov/pub/flight/aamps_ingest/wsra/'
-    'regex_exclude': '(.*201[0,1,2,3,4,5,6,7,8]/)'
-    'download_location': '/Users/abrammer/repos/wsra_scraper/output/'
-    'no_parents': True

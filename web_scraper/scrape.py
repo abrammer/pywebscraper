@@ -1,6 +1,7 @@
 """
 Simple utility to replicate a remote html file listing or ftp site
 Server modified times are copied over and directoriy structure is retained
+Can run as a service in which it won't repoll header information if no filenames have changed
 
 Examples:
     python scrape.py --config ncep_gens_config
@@ -8,7 +9,7 @@ Examples:
 
 
 TODO:
-    Build in some memory so it can be run as a service and limit header polling
+    Make installable and into a simple importable module
 
 Author: A. Brammer  (CIRA, 2019)
 """
@@ -21,6 +22,7 @@ import os
 import zlib
 import time
 import pathlib
+import gzip
 import re
 import sys
 import subprocess
@@ -63,6 +65,7 @@ class websync(HTMLParser):
         self.include_match = regex_include
         self.recursive = recursive
         self.no_parents = no_parents
+        logging.info("websync init'd")
         super().__init__()
 
     @property
@@ -126,9 +129,10 @@ class websync(HTMLParser):
     def ls(self, recursive=True):
         ''' Start the recursive or shallow search for files
         '''
+        logging.info(f"ls called {self.base_url}")
         self.recursive = recursive
         req = requests.get(self.base_url)
-        logging.debug(f'{self.base_url} -- {req.status_code}')
+        logging.info(f'{self.base_url} -- {req.status_code}')
         if req.status_code == 200:
             self.feed(req.text)
 
@@ -151,12 +155,14 @@ class websync(HTMLParser):
         logging.debug(f'Checking {link} against {outpath}')
         if not outpath.is_file():
             websync.sync_files(link, outpath)
+            logging.debug(f"downloaded new file to {outpath}")
             return outpath
         else:
             req = requests.head(link)
             url_date = parsedate(req.headers['Last-Modified']).timestamp()
             if url_date > outpath.stat().st_mtime:
                 websync.sync_files(link, outpath)
+                logging.debug(f"downloaded newer file to {outpath}")
                 return outpath
         return None
 
@@ -168,8 +174,12 @@ class websync(HTMLParser):
         req = requests.get(remote_url)
         if req.status_code == 200:
             local_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(local_path, 'wb') as f:
-                f.write(req.content)
+            if local_path.suffix.endswith('gz'):
+                with gzip.open(local_path, 'wb') as f:
+                    f.write(req.content)
+            else:
+                with open(local_path, 'wb') as f:
+                    f.write(req.content)
             modified_time = parsedate(req.headers['Last-Modified']).timestamp()
             access_time = datetime.utcnow().timestamp()
             os.utime(local_path, (access_time, modified_time))
@@ -182,12 +192,15 @@ class scraper:
         pass
 
     @staticmethod
-    def scrape(url:str, **kwargs): 
+    def scrape(url:str, callback_func=None, **kwargs):
         ''' Build list of potential files then farm out the download to multiple threads
         '''
         if not url.endswith('/'):
             url = f'{url}/'
+        logging.info(url)
+        logging.info(kwargs)
         parser = websync(url, **kwargs)
+        logging.info(parser)
         parser.ls(recursive=True)
         logging.info(f'Checking on {len(parser.return_links)} files')
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
@@ -198,16 +211,19 @@ class scraper:
             for x in concurrent.futures.as_completed(futures):
                 if x.result() is not None:
                     logging.info(x.result())
+                    if callback_func is not None:
+                        callback_func(x.result())
 
         logging.info(f'Finished syncing w/ {url}')
-    
+
     @staticmethod
-    def keep_scraping(url:str, **kwargs):
+    def keep_scraping(url:str, callback_func=None, **kwargs):
         ''' Build list of potential files then farm out the download to multiple threads
         '''
         if not url.endswith('/'):
             url = f'{url}/'
         most_recent_files = []
+        logging.info(callback_func)
         while True:
             parser = websync(url, **kwargs)
             parser.ls(recursive=True)
@@ -219,7 +235,13 @@ class scraper:
                         futures.append(executor.submit(parser.cp, link))
 
                     for x in concurrent.futures.as_completed(futures):
+                        logging.info(x.result())
                         if x.result() is not None:
+                            logging.info(callback_func)
+                            if callback_func is not None:
+                                logging.info(f'calling {callback_func}')
+                                #callback_func(x.result())
+                                callback_func(x.result())
                             logging.info(x.result())
 
                 most_recent_files = parser.return_links.copy()
@@ -234,12 +256,14 @@ def command_line_interface():
     parser.add_argument('--config', type=str)
     parser.add_argument('--service', type=bool, default=False)
     parser.add_argument('--logfile', type=str, default=None)
+    parser.add_argument('--debug', type=bool, default=False)
     args = parser.parse_args()
 
-    FORMAT = '%(levelname)-8s | %(asctime)-15s | %(pathname)-15s +%(lineno)-4d |  %(message)s'    
+    FORMAT = '%(levelname)-8s | %(asctime)-15s | %(pathname)-15s +%(lineno)-4d |  %(message)s'
     logFormatter = logging.Formatter(FORMAT)
     logging.basicConfig(format=FORMAT)
     logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
     if args.logfile is not None:
         logHandler = TimedRotatingFileHandler(args.logfile,
                                        when="d",
@@ -248,12 +272,15 @@ def command_line_interface():
         logHandler.rotator = log_rotator
         logHandler.namer = log_namer
         logHandler.setFormatter( logFormatter )
+        logHandler.setLevel(logging.INFO)
         logger.addHandler(logHandler)
-    logger.setLevel(logging.INFO)
-    
+
+    if args.debug or args.debug == "True":
+        logger.setLevel(logging.DEBUG)
+
     if (args.url is None) and (args.config is None):
         raise RuntimeError('Requires either --url or --config ')
-    
+
     if args.config is not None:
         with open(args.config) as f:
             config = yaml.safe_load(f)
@@ -274,6 +301,7 @@ def main(mp=-1):
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             s.bind(f"\0{'_'.join(config.keys())}")
         except OSError:
+            logging.debug('Already Running')
             return
         func = scraper.keep_scraping
     else:
@@ -282,9 +310,14 @@ def main(mp=-1):
     if mp == -1: mp = None
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+            jobs = []
             for site, data in config.items():
                 logging.info(f'Starting to scrape {site}')
-                executor.submit(func, **data)
+                jobs.append(executor.submit(func, **data))
+
+            for future in concurrent.futures.as_completed(jobs):
+                logging.info(future.exception())
+                logging.info("completed future")
     except KeyboardInterrupt:
         pass
     logging.info('Done with loop')
