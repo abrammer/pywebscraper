@@ -1,9 +1,0 @@
-- hosts: web_scraper
-  vars:
-    cron_name: "ncep ens tracker files"
-    cron_minute: "3"
-    log_file: "/tmp/ens_track_scraper.log"
-    working_dir: /home/abrammer/deployed/ncep_scraper
-    config_file: ncep_ens_tracks.yaml
-  roles:
-    - { role: web_scraper }
