@@ -156,7 +156,7 @@ class websync(HTMLParser):
         if not outpath.is_file():
             try:
                 websync.sync_files(link, outpath)
-            except Exception:
+            except ExRuntimeErrorception:
                 return None
             logging.debug(f"downloaded new file to {outpath}")
             return outpath
@@ -222,7 +222,7 @@ class scraper:
                         try:
                             callback_func(x.result())
                         except Exception:
-                            logging.exception(f"{url} not parsed correctly")
+                            logging.exception(f"{x.result()} not parsed correctly")
 
         logging.info(f'Finished syncing w/ {url}')
 
