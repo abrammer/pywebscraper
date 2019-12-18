@@ -154,7 +154,10 @@ class websync(HTMLParser):
                                *split_result.path.split('/'))
         logging.debug(f'Checking {link} against {outpath}')
         if not outpath.is_file():
-            websync.sync_files(link, outpath)
+            try:
+                websync.sync_files(link, outpath)
+            except RuntimeError:
+                return None
             logging.debug(f"downloaded new file to {outpath}")
             return outpath
         else:
@@ -171,7 +174,11 @@ class websync(HTMLParser):
         ''' Sync remote url with local path, copy over modified time
         '''
         logging.info(f'Downloading: {remote_url}')
-        req = requests.get(remote_url)
+        try:
+            req = requests.get(remote_url)
+        except requests.exceptions.ContentDecodingError:
+            logging.error(f"failed to decode {remote_url}")
+            raise RuntimeError
         if req.status_code == 200:
             local_path.parent.mkdir(parents=True, exist_ok=True)
             if local_path.suffix.endswith('gz'):
@@ -215,7 +222,7 @@ class scraper:
                         try:
                             callback_func(x.result())
                         except Exception:
-                            logging.exception(f"{url} not parsed correctly")
+                            logging.exception(f"{x.result()} not parsed correctly")
 
         logging.info(f'Finished syncing w/ {url}')
 
