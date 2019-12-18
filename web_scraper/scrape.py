@@ -212,7 +212,10 @@ class scraper:
                 if x.result() is not None:
                     logging.info(x.result())
                     if callback_func is not None:
-                        callback_func(x.result())
+                        try:
+                            callback_func(x.result())
+                        except Exception:
+                            logging.exception(f"{url} not parsed correctly")
 
         logging.info(f'Finished syncing w/ {url}')
 
@@ -241,7 +244,11 @@ class scraper:
                             if callback_func is not None:
                                 logging.info(f'calling {callback_func}')
                                 #callback_func(x.result())
-                                callback_func(x.result())
+                                try:
+                                    callback_func(x.result())
+                                except Exception:
+                                    logging.exception(f"{url} not parsed correctly")
+
                             logging.info(x.result())
 
                 most_recent_files = parser.return_links.copy()
