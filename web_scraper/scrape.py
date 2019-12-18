@@ -178,6 +178,7 @@ class websync(HTMLParser):
             req = requests.get(remote_url)
         except requests.exceptions.ContentDecodingError:
             logging.error(f"failed to decode {remote_url}")
+            raise
         if req.status_code == 200:
             local_path.parent.mkdir(parents=True, exist_ok=True)
             if local_path.suffix.endswith('gz'):
