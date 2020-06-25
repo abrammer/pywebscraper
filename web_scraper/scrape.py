@@ -245,17 +245,14 @@ class scraper:
                         futures.append(executor.submit(parser.cp, link))
 
                     for x in concurrent.futures.as_completed(futures):
-                        logging.info(x.result())
                         if x.result() is not None:
                             logging.info(callback_func)
                             if callback_func is not None:
                                 logging.info(f'calling {callback_func}')
-                                #callback_func(x.result())
                                 try:
                                     callback_func(x.result())
                                 except Exception:
                                     logging.exception(f"{url} not parsed correctly")
-
                             logging.info(x.result())
 
                 most_recent_files = parser.return_links.copy()
