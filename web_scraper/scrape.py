@@ -16,26 +16,33 @@ Author: A. Brammer  (CIRA, 2019)
 
 import argparse
 import concurrent.futures
-import logging
-from logging.handlers import TimedRotatingFileHandler
-import os
-import zlib
-import time
-import pathlib
+import functools
 import gzip
+import logging
+import os
+import pathlib
 import re
-import sys
-import subprocess
 import socket
+import subprocess
+import sys
+import time
+import zlib
 from datetime import datetime
 from html.entities import name2codepoint
 from html.parser import HTMLParser
+from logging.handlers import TimedRotatingFileHandler
 from urllib.parse import urljoin, urlsplit
 
 import requests
 import yaml
 from dateutil.parser import parse as parsedate
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
+MAX_CONNECTION_ERRS = 2
+MAX_RETRY_TIMES = 5
+BACKOFF_FACTOR = 1
+TIMEOUT_SECS = 2
 
 def log_namer(name):
     return name + ".gz"
@@ -50,6 +57,25 @@ def log_rotator(source, dest):
     os.remove(source)
 
 
+def _create_https_session():
+    """
+    Creates a session
+
+    Returns
+    -------
+    session : requests.sessions.Session
+        http(s) session with retry flags
+    """
+    retry = Retry(total=MAX_RETRY_TIMES, connect=MAX_CONNECTION_ERRS, backoff_factor=BACKOFF_FACTOR)
+    adapter = HTTPAdapter(max_retries=retry)
+    session = requests.Session()
+    session.auth = ('wmo', 'essential')
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    session.request = functools.partial(session.request, timeout=TIMEOUT_SECS)
+    return session
+
+
 class websync(HTMLParser):
     def __init__(self,
                  url,
@@ -57,7 +83,8 @@ class websync(HTMLParser):
                  regex_exclude=None,
                  regex_include=None,
                  recursive=True,
-                 no_parents=False):
+                 no_parents=False,
+                 session=None):
         self.return_links = []
         self.base_url = url
         self.download_location = download_location
@@ -65,6 +92,7 @@ class websync(HTMLParser):
         self.include_match = regex_include
         self.recursive = recursive
         self.no_parents = no_parents
+        self.session = session or _create_https_session()
         logging.info("websync init'd")
         super().__init__()
 
@@ -117,7 +145,8 @@ class websync(HTMLParser):
                         sub_url = urljoin(self.base_url, attr[1].strip())
                         parser = websync(sub_url,
                                          regex_exclude=self.exclude_match,
-                                         regex_include=self.include_match)
+                                         regex_include=self.include_match,
+                                         session=self.session)
                         parser.ls()
                         self.return_links += parser.return_links
                 else:
@@ -131,7 +160,10 @@ class websync(HTMLParser):
         '''
         logging.info(f"ls called {self.base_url}")
         self.recursive = recursive
-        req = requests.get(self.base_url)
+        try:
+            req = self.session.get(self.base_url)
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            return
         logging.info(f'{self.base_url} -- {req.status_code}')
         if req.status_code == 200:
             self.feed(req.text)
@@ -161,7 +193,7 @@ class websync(HTMLParser):
             logging.debug(f"downloaded new file to {outpath}")
             return outpath
         else:
-            req = requests.head(link)
+            req = self.session.head(link)
             url_date = parsedate(req.headers['Last-Modified']).timestamp()
             if url_date > outpath.stat().st_mtime:
                 websync.sync_files(link, outpath)
@@ -175,10 +207,13 @@ class websync(HTMLParser):
         '''
         logging.info(f'Downloading: {remote_url}')
         try:
-            req = requests.get(remote_url)
+            session = _create_https_session()
+            req = session.get(remote_url)
         except requests.exceptions.ContentDecodingError:
             logging.error(f"failed to decode {remote_url}")
             raise RuntimeError
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            return RuntimeError
         if req.status_code == 200:
             local_path.parent.mkdir(parents=True, exist_ok=True)
             if local_path.suffix.endswith('gz'):

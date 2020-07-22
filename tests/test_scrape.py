@@ -58,12 +58,12 @@ def test_main_config(_scrape):
 @mock.patch('web_scraper.scrape.websync.cp', return_value=None)
 def test_webls(_cp):
     return_text1 = b"""
-    <a href="18060818EP0218.DAT">18060818EP0218.DAT</a> 
+    <a href="18060818EP0218.DAT">18060818EP0218.DAT</a>
     <a href="1806072011EP02.AMSR2.INTENSITY_ETA.DAT">1806072011EP02.AMSR2..&gt;</a>
     <a href="subdir/">subdir/</a>
     """
     return_text2 = b"""
-    <a href="subdir1.DAT">ubdir1.DAT.DAT</a> 
+    <a href="subdir1.DAT">ubdir1.DAT.DAT</a>
     """
     with requests_mock.Mocker() as m:
         test_url = 'http://none.invalid'
@@ -85,13 +85,13 @@ def test_webls(_cp):
 @mock.patch('web_scraper.scrape.websync.cp', return_value=None)
 def test_webls_exclude(_cp):
     return_text1 = b"""
-    <a href="18060818EP0214.DAT">18060818EP0214.DAT</a> 
-    <a href="18060818EP0218.DAT">18060818EP0218.DAT</a> 
-    <a href="1806072011EP02.AMSR2.INTENSITY_ETA.DAT">1806072011EP02.AMSR2..&gt;</a>
+    <a href="18060818EP0214.DAT">_18060818EP0214.DAT</a>
+    <a href="18060818EP0218.DAT">_18060818EP0218.DAT</a>
+    <a href="1806072011EP02.AMSR2.INTENSITY_ETA.DAT">_1806072011EP02.AMSR2..&gt;</a>
     <a href="subdir/">subdir/</a>
     """
     return_text2 = b"""
-    <a href="subdir1.DAT">ubdir1.DAT.DAT</a> 
+    <a href="subdir1.DAT">_subdir1.DAT</a>
     """
 
     with requests_mock.Mocker() as m:
@@ -116,13 +116,13 @@ def test_webls_exclude(_cp):
 @mock.patch('web_scraper.scrape.websync.cp', return_value=None)
 def test_webls_include(_cp):
     return_text1 = b"""
-    <a href="18060818EP0214.DAT">18060818EP0214.DAT</a> 
-    <a href="18060818EP0218.DAT">18060818EP0218.DAT</a> 
+    <a href="18060818EP0214.DAT">18060818EP0214.DAT</a>
+    <a href="18060818EP0218.DAT">18060818EP0218.DAT</a>
     <a href="1806072011EP02.AMSR2.INTENSITY_ETA.DAT">1806072011EP02.AMSR2..&gt;</a>
     <a href="subdir/">subdir/</a>
     """
     return_text2 = b"""
-    <a href="subdir1.DAT">ubdir1.DAT.DAT</a> 
+    <a href="subdir1.DAT">ubdir1.DAT.DAT</a>
     """
 
     with requests_mock.Mocker() as m:
@@ -135,7 +135,7 @@ def test_webls_include(_cp):
         assert len(websyncer.return_links) == 1
         assert websyncer.return_links == [
             f'{test_url}/{a}' for a in
-            [ '1806072011EP02.AMSR2.INTENSITY_ETA.DAT']] 
+            [ '1806072011EP02.AMSR2.INTENSITY_ETA.DAT']]
 
         # test above again passing through scrape this time
         # how many times does cp get hit
