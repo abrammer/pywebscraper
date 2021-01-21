@@ -43,6 +43,7 @@ MAX_CONNECTION_ERRS = 2
 MAX_RETRY_TIMES = 5
 BACKOFF_FACTOR = 1
 TIMEOUT_SECS = 2
+SERVICE_REFRESH_MINS = 5
 
 def log_namer(name):
     return name + ".gz"
@@ -84,6 +85,7 @@ class websync(HTMLParser):
                  regex_include=None,
                  recursive=True,
                  no_parents=False,
+                 update_exisitng=True,
                  session=None):
         self.return_links = []
         self.base_url = url
@@ -192,7 +194,7 @@ class websync(HTMLParser):
                 return None
             logging.debug(f"downloaded new file to {outpath}")
             return outpath
-        else:
+        elif self.update_existing:
             req = self.session.head(link)
             url_date = parsedate(req.headers['Last-Modified']).timestamp()
             if url_date > outpath.stat().st_mtime:
@@ -292,7 +294,7 @@ class scraper:
 
                 most_recent_files = parser.return_links.copy()
             logging.info(f'Sleeping on sync w/ {url}')
-            time.sleep(5*60)
+            time.sleep(SERVICE_REFRESH_MINS*60)
 
 
 def command_line_interface():
