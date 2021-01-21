@@ -85,7 +85,7 @@ class websync(HTMLParser):
                  regex_include=None,
                  recursive=True,
                  no_parents=False,
-                 update_exisitng=True,
+                 update_existing=True,
                  session=None):
         self.return_links = []
         self.base_url = url
