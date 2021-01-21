@@ -149,7 +149,7 @@ class websync(HTMLParser):
                         parser = websync(sub_url,
                                          regex_exclude=self.exclude_match,
                                          regex_include=self.include_match,
-                                         update_existing=self.update_exising,
+                                         update_existing=self.update_existing,
                                          session=self.session)
                         parser.ls()
                         self.return_links += parser.return_links
