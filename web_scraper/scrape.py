@@ -94,6 +94,7 @@ class websync(HTMLParser):
         self.include_match = regex_include
         self.recursive = recursive
         self.no_parents = no_parents
+        self.update_existing = update_existing
         self.session = session or _create_https_session()
         logging.info("websync init'd")
         super().__init__()
@@ -148,6 +149,7 @@ class websync(HTMLParser):
                         parser = websync(sub_url,
                                          regex_exclude=self.exclude_match,
                                          regex_include=self.include_match,
+                                         update_existing=self.update_exising,
                                          session=self.session)
                         parser.ls()
                         self.return_links += parser.return_links
