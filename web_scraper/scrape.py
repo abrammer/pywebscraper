@@ -191,7 +191,7 @@ class websync(HTMLParser):
         logging.debug(f'Checking {link} against {outpath}')
         if not outpath.is_file():
             try:
-                websync.sync_files(link, outpath)
+                self.sync_files(link, outpath)
             except RuntimeError:
                 return None
             logging.debug(f"downloaded new file to {outpath}")
@@ -200,19 +200,19 @@ class websync(HTMLParser):
             req = self.session.head(link)
             url_date = parsedate(req.headers['Last-Modified']).timestamp()
             if url_date > outpath.stat().st_mtime:
-                websync.sync_files(link, outpath)
+                self.sync_files(link, outpath)
                 logging.debug(f"downloaded newer file to {outpath}")
                 return outpath
         return None
 
-    @staticmethod
-    def sync_files(remote_url: str, local_path: pathlib.Path):
+    
+    def sync_files(self, remote_url: str, local_path: pathlib.Path):
         ''' Sync remote url with local path, copy over modified time
         '''
         logging.info(f'Downloading: {remote_url}')
         try:
-            session = _create_https_session()
-            req = session.get(remote_url)
+            # session = _create_https_session()
+            req = self.session.get(remote_url)
         except requests.exceptions.ContentDecodingError:
             logging.error(f"failed to decode {remote_url}")
             raise RuntimeError
